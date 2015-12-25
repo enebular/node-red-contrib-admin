@@ -1,0 +1,371 @@
+<script type="text/javascript">
+
+	function init_admin_plugin() {
+		var adminTab = $('<div/>', {'id': 'tab-admin'});
+	    RED.sidebar.addTab('admin', adminTab);
+	    //RED.sidebar.show({id:'admin'});
+	    admin_refresh();
+	    RED.view.redraw();
+	}
+
+/*
+    RED.nodes.registerType('admin',{
+        category: 'function',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value:""}
+        },
+        inputs:1,
+        outputs:1,
+        icon: "file.png",
+        label: function() {
+            return this.name||"admin";
+        },
+        onpaletteadd : function() {
+        	init_admin_plugin();
+        }
+    });*/
+
+
+function admin_refresh() {
+    get_nodes(function(err, nodes) {
+        var modules = {}
+           ,nodesEl = {}
+           ;
+
+        nodes.map(function(node){
+            modules[node.module] = node.module;
+            nodesEl[node.module] = '';
+        });
+
+        // install panel
+        var str  = '<div class="enebular-admin-install-panel">'
+                 +   '<div class="enebular-admin-search">'
+                 +     '<input id="admin-search-module-name" type="text" value="node-red-contrib-" class="enebular-admin-search-input" />'
+                 +     '<div id="admin-search-result" class="enebular-admin-search-result"></div>'
+                 +   '</div>'
+                 +   '<button id="admin-install-btn" class="enebular-admin-install-btn btn" disabled>Install</button>'
+                 + '</div>';
+
+        str     += '<hr class="enebular-hr">';
+
+        // module list
+        str     += '<ul class="enebular-admin-module-list">';
+
+        // node
+        nodes.forEach(function(n) {
+            var checked = n.enabled ? 'checked="checked"' : '';
+            var isDisabled = !n.enabled ? ' is-disabled' : '';
+
+            nodesEl[n.module] +=
+              '<li class="enebular-admin-node">'
+            +   '<input type="checkbox" name="enebularAdminSwitch" id="enebularAdminSwitch-'+n.name+'" '+checked+' data-cid="'+n.id+'" class="enebular-admin-switch" />'
+            +   '<label for="enebularAdminSwitch-'+n.name+'" class="enebular-admin-switchLabel"></label>'
+            +   '<span class="enebular-admin-node-name'+isDisabled+'" id="enebularAdminModuleName-'+n.name+'">'+n.name+'</span>'
+            + '</li>';
+        });
+
+        // module > node
+        Object.keys(modules).forEach(function(key) {
+            var deleteBtn = !(key === 'node-red') ? '<div data-cid="'+key+'" class="enebular-admin-delete-btn">×</div>' : '';
+
+            str += '<div class="enebular-admin-moduleWrapper">'
+                 +   '<div class="enebular-admin-module">'
+                 +     '<div class="enebular-admin-module-title">'+key+'</div>'
+                 +     deleteBtn
+                 +     '<ul class="enebular-admin-node-list" id="enebularAdminModule-'+key+'">'
+                 +       nodesEl[key]
+                 +     '</ul>'
+                 +   '</div>'
+                 + '</div>';
+        }, modules);
+
+        str += '</ul>';
+
+
+        $('#tab-admin').html('<div class="enebular-admin-wrapper">'+str+'</div>');
+
+        $('#admin-search-module-name').focus(function (e) {
+            RED.keyboard.remove(/* backspace */ 8);
+            RED.keyboard.remove(/* delete */ 46);
+        });
+
+        $('#admin-search-module-name').keyup(function(e) {
+            var name = $(this).val();
+            $("#admin-install-btn").prop("disabled", true);
+            search_module(name, function(err, content) {
+                if(err) {
+                    $('#admin-search-result').html('<div class="enebular-admin-search-item not-found">Not Found</div>');
+                     $('#admin-search-result').html('');
+                     $('#admin-search-result').removeClass('is-shown');
+                    return;
+                }
+                var html = content.map(function(m) {
+                    return '<div class="enebular-admin-search-item">'+m+'</div>';
+                }).join('');
+                $('#admin-search-result').html(html);
+                $('#admin-search-result').addClass('is-shown');
+            });
+        });
+
+        $('#admin-search-result').on('click', '.enebular-admin-search-item', function(e) {
+            var module_name = $(this).html();
+            $("#admin-install-btn").prop("disabled", false);
+            $('#admin-search-module-name').val(module_name);
+            $('#admin-search-result').html('');
+            $('#admin-search-result').removeClass('is-shown');
+        });
+
+        $('#admin-search-module-name').blur(function(e){
+            setTimeout(function(){
+                $('#admin-search-result').html('');
+                $('#admin-search-result').removeClass('is-shown');
+            }, 250);
+        });
+
+        $('#admin-install-btn').click(function(e) {
+            var name = $('#admin-search-module-name').val();
+            install_node(name, function() {console.log('success');admin_refresh();});
+        });
+
+        $('.enebular-admin-switch').change(function(e) {
+            var module = $(this).data('cid');
+            var enabled = $(this).is(':checked');
+            var id = $(this).attr("id");
+
+            var moduleName = id.replace(/^enebularAdminSwitch-/, '');
+
+            if(enabled) $('#enebularAdminModuleName-'+moduleName).removeClass('is-disabled');
+            else $('#enebularAdminModuleName-'+moduleName).addClass('is-disabled');
+
+            edit_node(module, enabled, function() {console.log('success');});
+        });
+
+        $('.enebular-admin-delete-btn').click(function(e) {
+            var module = $(this).data('cid');
+            if(window.confirm('“'+module+'” モジュールを削除してもよろしいですか？')) remove_node(module, function() {console.log('success');admin_refresh();});
+        });
+    });
+}
+
+function get_nodes(cb) {
+    admin_get('nodes', cb);
+}
+
+function search_module(module, cb) {
+    admin_get('/enebular/search/'+module, function(err, data) {
+        if(err || data.err) cb(err || data.err);
+        else cb(null, data.content);
+    });
+}
+
+function install_node(module, cb) {
+    admin_post('nodes', {module : module}, cb);
+}
+
+function get_node(module, cb) {
+    admin_get('nodes/'+module, {module : module}, cb);
+}
+
+function edit_node(module, enabled, cb) {
+    admin_put('nodes/'+module, {enabled : enabled}, cb);
+}
+
+function remove_node(module, cb) {
+    admin_delete('nodes/'+module, cb);
+}
+
+function admin_get(url, cb) {
+    admin_base(url, 'GET', null, cb);
+}
+
+function admin_post(url, body, cb) {
+    admin_base(url, 'POST', JSON.stringify(body), cb);
+}
+
+function admin_put(url, body, cb) {
+    admin_base(url, 'PUT', JSON.stringify(body), cb);
+}
+
+function admin_delete(url, cb) {
+    admin_base(url, 'DELETE', null, cb);
+}
+
+function admin_base(url, method, body, cb) {
+    var auth_tokens = RED.settings.get("auth-tokens");
+    var headers = {
+        "Accept":"application/json",
+    }
+    if(auth_tokens) {
+        headers["Authorization"] = "Bearer "+auth_tokens.access_token;
+    }
+    $.ajax({
+        headers: headers,
+        contentType: 'application/json',
+        type: method,
+        data: body,
+        cache: false,
+        url: url,
+        success: function(data) {
+            //console.log("nodes", data);
+            cb(null, data);
+        }
+    });
+}
+
+</script>
+
+<style>
+.enebular-admin-wrapper {
+  margin: 4px 8px; }
+
+.enebular-admin-install-panel {
+  margin-top: 8px;
+  margin-bottom: 0px; }
+
+.enebular-admin-search {
+  position: relative; }
+
+.enebular-admin-search-input {
+  box-sizing: border-box;
+  height: 30px !important;
+  width: 100%;
+  margin-bottom: 0 !important; }
+
+.enebular-admin-search-result {
+  z-index: 2;
+  box-sizing: border-box;
+  position: absolute;
+  top: 100%;
+  background-color: #fff;
+  width: 100%;
+  box-shadow: 0 1px 1px 1px rgba(0,0,0,.2);
+  visibility: hidden; }
+
+.enebular-admin-search-result.is-shown {
+  visibility: visible; }
+
+.enebular-admin-search-item {
+  cursor: pointer;
+  padding: 8px 8px; }
+
+.enebular-admin-search-item:hover {
+  background-color: #f0f0f0; }
+
+.enebular-admin-install-btn {
+  width: 100%;
+  color: #666;
+  background: #f3f3f3;
+/*  border: solid 1px #666;*/
+  margin-top: 8px; }
+
+.enebular-admin-module-list{
+  margin: 0; }
+
+.enebular-admin-moduleWrapper{
+  position: relative;
+  margin-bottom: 12px; }
+
+.enebular-admin-module{
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 3px; }
+
+.enebular-admin-module-title{
+  margin: -6px -6px 6px;
+  padding: 8px 24px 8px 8px;
+  background-color: #f3f3f3;
+  border-bottom: 1px solid #ddd; }
+
+.enebular-admin-delete-btn {
+  cursor: pointer;
+  color: #CB1313;
+  position: absolute;
+  top: 9px;
+  right: 14px; }
+
+.enebular-admin-node-list {
+  padding-left: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: 0;
+  list-style-type: none; }
+
+.enebular-admin-node {
+  position: relative;
+  border-radius: 3px;
+  border: 1px solid #ddd;
+  padding: 6px;
+  margin-bottom: 6px;
+  line-height: 1;
+  height: 36px;
+  box-sizing: border-box; }
+
+.enebular-admin-node:last-child {
+  margin-bottom: 0; }
+
+.enebular-admin-node-name {
+  color: inherit;
+  vertical-align: top;
+  position: relative;
+  top: 5px;
+  -webkit-transition: color 0.4s;
+  transition: color 0.4s;}
+.enebular-admin-node-name.is-disabled {
+  color: #bbb; }
+
+.enebular-admin-switch {
+  display: block;
+  opacity: 0;
+  margin-top: 0;
+  float: left; }
+
+.enebular-admin-switchLabel {
+  position: relative;
+  top: 1px;
+  left: -12px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  background: #d2d2d2;
+  /* background: rgb(189, 189, 189); */
+  /*border-radius: 30px;*/
+  border-radius: 3px;
+  -webkit-transition: background-color 0.4s;
+  transition: background-color 0.4s;
+  margin-bottom: 0; }
+/*.enebular-admin-switchLabel:after {
+  left: 0;
+  width: 20px;
+  height: 20px;
+  margin: 5px;
+  content: '';
+  position: absolute;
+  background: #FFF;
+  border-radius: 10px; }*/
+
+.enebular-admin-switch:checked + .enebular-admin-switchLabel {
+  background: #55B564;
+  /* background: rgb(39, 173, 95); */ }
+
+/*.enebular-admin-switch:checked + .enebular-admin-switchLabel:after {
+  left: auto;
+  right: 0; }*/
+
+.enebular-admin-enable-checkbox {
+
+}	
+</style>
+
+<script type="text/x-red" data-template-name="admin">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="admin">
+    <p>A simple node that converts the message payloads into all lower-case characters</p>
+</script>

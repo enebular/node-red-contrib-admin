@@ -1,0 +1,39 @@
+{
+  "name": "node-red-contrib-admin",
+  "version": "0.0.1",
+  "engines": {
+    "node": "0.12.x"
+  },
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "request": "^2.65.0",
+    "when": "~3.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enebular/node-red-contrib-admin"
+  },
+  "license": "Apache",
+  "keywords": [
+    "enebular",
+    "enebular-agent",
+    "node-red",
+    "editor",
+    "messaging",
+    "iot",
+    "m2m",
+    "flow"
+  ],
+  "author": {
+    "name": "syuhei176",
+    "email": "syuhei176@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "syuhei176",
+	    "email": "syuhei176@gmail.com"
+    }
+  ]
+}
