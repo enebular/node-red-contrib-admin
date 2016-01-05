@@ -4,17 +4,8 @@ var when = require("when");
 var body_cache = null;
 
 module.exports = function(RED) {
-	/*
-    function LowerCaseNode(config) {
-        RED.nodes.createNode(this,config);
-        var node = this;
-        this.on('input', function(msg) {
-            msg.payload = msg.payload.toLowerCase();
-            node.send(msg);
-        });
-    }
-    RED.nodes.registerType("admin",LowerCaseNode);
-    */
+
+
 	RED.httpAdmin.get("/enebular/search/:module", function (req, res) {
 		var module = req.param('module');
 		searchModule(module, function(err, content) {

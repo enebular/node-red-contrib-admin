@@ -1,30 +1,12 @@
 <script type="text/javascript">
-
+  init_admin_plugin();
 	function init_admin_plugin() {
-		var adminTab = $('<div/>', {'id': 'tab-admin'});
-	    RED.sidebar.addTab('admin', adminTab);
+		  var adminTab = $('<div/>', {'id': 'tab-admin'});
+	    RED.sidebar.addTab('admin', adminTab[0]);
 	    //RED.sidebar.show({id:'admin'});
 	    admin_refresh();
 	    RED.view.redraw();
 	}
-
-/*
-    RED.nodes.registerType('admin',{
-        category: 'function',
-        color: '#a6bbcf',
-        defaults: {
-            name: {value:""}
-        },
-        inputs:1,
-        outputs:1,
-        icon: "file.png",
-        label: function() {
-            return this.name||"admin";
-        },
-        onpaletteadd : function() {
-        	init_admin_plugin();
-        }
-    });*/
 
 
 function admin_refresh() {
