@@ -11,6 +11,11 @@
     "request": "^2.65.0",
     "when": "~3.x"
   },
+  "node-red": {
+    "nodes": {
+      "admin": "admin/admin.js"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/enebular/node-red-contrib-admin"
