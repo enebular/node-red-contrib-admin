@@ -135,7 +135,7 @@ function get_nodes(cb) {
 }
 
 function search_module(module, cb) {
-    admin_get('/enebular/search/'+module, function(err, data) {
+    admin_get('enebular/search/'+module, function(err, data) {
         if(err || data.err) cb(err || data.err);
         else cb(null, data.content);
     });
