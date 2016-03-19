@@ -27,6 +27,7 @@ function admin_refresh() {
                  +     '<div id="admin-search-result" class="enebular-admin-search-result"></div>'
                  +   '</div>'
                  +   '<button id="admin-install-btn" class="enebular-admin-install-btn btn" disabled>Install</button>'
+                 + '<div id="enebular-admin-install-message"></div>'
                  + '</div>';
 
         str     += '<hr class="enebular-hr">';
@@ -107,7 +108,14 @@ function admin_refresh() {
 
         $('#admin-install-btn').click(function(e) {
             var name = $('#admin-search-module-name').val();
-            install_node(name, function() {console.log('success');admin_refresh();});
+            show_message('Installing...');
+            $("#admin-install-btn").prop("disabled", true);
+            install_node(name, function() {
+              show_message('');
+              $("#admin-install-btn").prop("disabled", false);
+              console.log('success');
+              admin_refresh();
+            });
         });
 
         $('.enebular-admin-switch').change(function(e) {
@@ -128,6 +136,11 @@ function admin_refresh() {
             if(window.confirm('“'+module+'” モジュールを削除してもよろしいですか？')) remove_node(module, function() {console.log('success');admin_refresh();});
         });
     });
+}
+
+function show_message(m) {
+  var mes = document.getElementById('enebular-admin-install-message')
+  mes.textContent = m;
 }
 
 function get_nodes(cb) {
