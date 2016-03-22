@@ -133,7 +133,7 @@ function admin_refresh() {
 
         $('.enebular-admin-delete-btn').click(function(e) {
             var module = $(this).data('cid');
-            if(window.confirm('“'+module+'” モジュールを削除してもよろしいですか？')) remove_node(module, function() {console.log('success');admin_refresh();});
+            if(window.confirm('“'+module+'” to be removed? Are you sure？')) remove_node(module, function() {console.log('success');admin_refresh();});
         });
     });
 }
