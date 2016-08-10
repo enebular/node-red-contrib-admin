@@ -7,7 +7,7 @@ module.exports = function(RED) {
 
 
 	RED.httpAdmin.get("/enebular/search/:module", function (req, res) {
-		var module = req.param('module');
+		var module = req.params['module'];
 		searchModule(module, function(err, content) {
 		if(err) res.json({err:err});
 		else res.json({content:content});
