@@ -14,6 +14,9 @@ module.exports = function(RED) {
 }
 
 function searchModule(module_name, cb) {
+  if (!module_name.length) {
+    return
+  }
   var options = {
     method: 'GET',
     url: 'https://catalogue.nodered.org/catalogue.json',
@@ -21,13 +24,7 @@ function searchModule(module_name, cb) {
       Accept: 'application/json'
     }
   }
-  // var options = {
-  //     method: "GET",
-  //     url: 'https://registry.npmjs.org/-/_view/byKeyword?startkey=["node-red"]&amp;endkey=["node-red",{}]&amp;group_level=3',
-  //     headers: {
-  //         'Accept': 'application/json',
-  //     }
-  // };
+
   if (body_cache) match(module_name, body_cache, cb)
   else {
     httpRequest.get(options, function(error, response, body) {
@@ -61,22 +58,3 @@ function match(module_name, body, cb) {
     cb('Not Found')
   }
 }
-
-// function match(module_name, body, cb) {
-//   var result = []
-//   var info = JSON.parse(body).rows
-//   var filter = new RegExp(module_name)
-//   var found = false
-//   for (var i = 0; i < info.length; i++) {
-//     var n = info[i]
-//     if (!filter || filter.test(n.key[1]) || filter.test(n.key[2])) {
-//       result.push(n.key[1])
-//       found = true
-//     }
-//   }
-//   if (found) {
-//     cb(null, result)
-//   } else {
-//     cb('Not Found')
-//   }
-// }
