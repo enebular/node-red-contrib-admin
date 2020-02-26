@@ -17,9 +17,6 @@ jobs: # a collection of steps
 
 workflows:
   version: 2
-  issue-11:
+  master:
     jobs:
       - clamav
-  # master:
-  #   jobs:
-  #     - clamav
