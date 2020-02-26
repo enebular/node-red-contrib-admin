@@ -1,0 +1,21 @@
+version: 2.1
+orbs:
+  node: circleci/node@1.1.6
+jobs:
+  clamav:
+    working_directory: ~/node-red-contrib-admin
+    docker: # run the steps with Docker
+      - image: circleci/node
+    steps:
+      - checkout
+      - run:
+          name: cramAV test
+          command: |
+            sudo apt-get -y update
+            sudo apt-get -y install clamav
+            sudo freshclam
+            sudo clamscan --infected --remove --recursive ~/node-red-contrib-admin
+workflows:
+    build-and-test:
+      jobs:
+        - clamav
