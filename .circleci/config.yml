@@ -20,6 +20,6 @@ workflows:
   issue-11:
     jobs:
       - clamav
-  master:
-    jobs:
-      - clamav
+  # master:
+  #   jobs:
+  #     - clamav
